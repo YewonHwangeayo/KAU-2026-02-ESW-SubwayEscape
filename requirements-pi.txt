@@ -1,0 +1,4 @@
+-r requirements.txt
+adafruit-blinka
+adafruit-circuitpython-rgb-display
+spidev

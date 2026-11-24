@@ -61,7 +61,27 @@ python -m pip install -r requirements.txt
 python main.py
 ```
 
-Pi에서 실행하려면 SPI를 활성화하고 `requirements.txt`의 의존성과 함께 `adafruit-blinka`, `adafruit-circuitpython-rgb-display`를 설치합니다. `python pi_main.py --help`에서 LCD의 CS·DC·RST, 버튼 6개의 GPIO, LCD 회전 및 X/Y 오프셋을 전달하는 방법을 확인할 수 있습니다. 버튼은 내부 풀업을 사용하며 눌렀을 때 GPIO가 GND에 연결되도록 배선합니다. 실제 LCD 모듈과 버튼을 연결한 동작 검증은 남아 있습니다.
+Pi 실습 보드의 ST7789 LCD와 GPIO 버튼 실행은 다음과 같습니다.
+
+```sh
+source .venv_pi/bin/activate
+python -m pip install -r requirements-pi.txt
+python pi_main.py
+```
+
+기본 설정은 교수님이 제공한 `Joystick.py`에 맞춰 240×240, rotation 180, X offset 0, Y offset 80, 24MHz입니다. LCD CS는 CE0(GPIO8), DC는 D25, RESET은 D24, 백라이트는 D26입니다. 방향 버튼은 LEFT D27, RIGHT D23, UP D17, DOWN D22이며 A D5, B D6, C D4를 사용합니다. C는 입력 검사에만 사용합니다. 버튼은 참고 코드와 같이 입력 모드로 설정하며 눌렀을 때 LOW로 읽습니다.
+
+CE0는 `/dev/spidev0.0`의 커널 하드웨어 CS로 제어합니다. GPIO8을 `DigitalInOut`으로 요청하지 않으며 Adafruit LCD 드라이버에는 `cs=None`을 전달합니다. SPI0가 GPIO8을 CE0로 사용하도록 설정되어 있어야 합니다. 이전에 CE0를 다른 핀으로 재할당했다면 실제 SPI 설정을 확인해야 합니다.
+
+```sh
+python pi_main.py --mode diagnose
+python pi_main.py --mode lcd-test --seconds 10
+python pi_main.py --mode buttons-test --seconds 20
+```
+
+진단은 GPIO 점유 정보, GPIO8 핀 기능, SPI 사용 프로세스와 설정을 읽습니다. LCD 테스트는 RGB 색상과 흰 테두리를 출력하고, 버튼 테스트는 A/B/C 및 방향 버튼 상태를 터미널에 표시합니다. 종료는 Ctrl-C이며 SIGTERM도 정리 경로를 실행합니다. 이미 확보한 GPIO와 SPI는 초기화 오류 및 실행 예외에서도 해제하고 백라이트를 끕니다. 강제 종료 SIGKILL이나 전원 차단에서는 Python 정리 코드를 실행할 수 없습니다.
+
+실제 GPIO 점유 원인과 LCD 출력, 버튼 입력, 종료 후 재실행은 Pi에서 확인해야 합니다. 개발 환경에서의 SSH 접속은 인증 실패로 완료하지 못했습니다.
 
 ## 4. 주요 기능 및 구현
 
